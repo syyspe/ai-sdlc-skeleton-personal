@@ -1,13 +1,13 @@
 ---
 name: simple-code
-description: Use whenever writing, editing, or refactoring code in any language (Stage 3 build) or reviewing a diff (Stage 5 review). Trigger before adding a new function, class, or file, and any time a function/file is growing or picking up a new parameter or nesting level.
+description: Use whenever writing, editing, or refactoring code in any language (Stage 3 build) or reviewing a diff (Stage 4 review). Trigger before adding a new function, class, or file, and any time a function/file is growing or picking up a new parameter or nesting level.
 ---
 
 # Simple Code
 
-Write only what's needed to satisfy the current `plan.md`/`spec.md`.
-Nothing extra "for later," nothing defensive against inputs that can't
-occur, nothing clever that a plainer version would express just as well.
+Write only what's needed to satisfy the current `plan.md`. Nothing extra
+"for later," nothing defensive against inputs that can't occur, nothing
+clever that a plainer version would express just as well.
 
 ## Red-Green-Refactor
 
@@ -19,7 +19,7 @@ The required workflow for any new behavior, not just bug fixes:
 3. **Refactor** — simplify without changing behavior, re-running tests
    after each step.
 
-This is the same discipline the root `README.md` (Stage 4) and
+This is the same discipline the root `README.md` (Stage 3) and
 `plans/TEMPLATE.plan.md` already name for bug fixes — this skill makes it
 the default for all new code.
 

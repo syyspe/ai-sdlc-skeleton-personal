@@ -1,35 +1,33 @@
-# AI-Native SDLC Skeleton
+# AI-Native SDLC Skeleton (personal scale)
 
-A starter repo for running the full software development lifecycle with Claude
-embedded at every stage, following the [AI-Native SDLC
-Playbook](https://claude.com/blog/the-ai-native-sdlc-playbook). Clone this
-into a new project to get the artifact chain, guardrails, and eval loop
-scaffolded from day one.
+A starter repo for running your own projects with Claude embedded at every
+stage. Adapted from the [AI-Native SDLC
+Playbook](https://claude.com/blog/the-ai-native-sdlc-playbook), with the
+organizational scaffolding taken out: no product owners, no policy owners, no
+sign-off chain, no SLO control bands, no on-call routing. One person, working
+on their own things, with an agent that has enough structure to stay honest.
 
-The core idea: every stage produces a version-controlled artifact the next
-stage reads. Humans stay accountable for judgment calls (approving specs,
-plans, and production releases); Claude does the work in between.
+The core idea survives the shrink: **every stage produces a version-controlled
+artifact the next stage reads.** You stay accountable for judgment calls
+(what to build, whether the plan is right, whether it merges); Claude does the
+work in between.
 
 ```
-intent.md  →  spec.md  →  plan.md  →  PR + tests  →  deploy  →  monitoring
- (Plan)       (Design)     (Build)     (Test/Review)  (Deploy)   (Maintain)
+brief.md  →  plan.md  →  code + tests  →  PR
+ (Brief)     (Plan)      (Build)          (Ship)
 ```
-
-Each stage ends by committing its artifact, and that commit is what starts
-the next one:
 
 | Stage | Artifact | Done when | Which unlocks |
 |---|---|---|---|
-| 1. Plan | `intent/<slug>.md` | product owner sets `status: approved` | Design |
-| 2. Design | `design/<slug>.spec.md` | policy flags resolved, product owner sets `status: approved` | Build |
-| 3. Build | `plans/<slug>.plan.md`, then code | plan committed **before** code, work order done | Test |
-| 4. Test | verification output, `verifier` verdict | the command in `CLAUDE.md` passes and `verifier` says PASS | Deploy |
-| 5. Deploy | PR reviewed per `REVIEW.md` | a human approves and merges | Maintain |
-| 6. Maintain | `bands.yaml` breach → new `intent/*.md` | the breach is triaged | Plan, again |
+| 1. Brief | `brief/<slug>.md` | problem, requirements, approach, out-of-scope are written down | Plan |
+| 2. Plan | `plans/<slug>.plan.md` | plan committed **before** any code | Build |
+| 3. Build | code + tests | the work order is done | Ship |
+| 4. Ship | PR reviewed per `REVIEW.md` | verification passes, `verifier` says PASS, you merge | Brief, again |
 
-You never have to hold that in your head. Every session starts by telling
-you which stage the current branch is in and what the next action is, and
-**`/sdlc`** re-answers that any time you ask.
+There is no `status:` frontmatter and nothing to approve. **An artifact exists
+or it doesn't** — that's the entire state machine, and it's readable with
+`ls`. Every session opens by telling you which stage the current branch is in
+and what's next; **`/sdlc`** re-answers that any time you ask.
 
 ## Prerequisites
 
@@ -43,17 +41,19 @@ you which stage the current branch is in and what the next action is, and
   PR-only, so opening PRs is part of the normal flow, starting with
   bootstrap's own setup PR. Without it nothing breaks; you just open each PR
   in a browser from a compare URL instead.
-- **jq** — only needed to run `evals/run.sh` locally (Stage 4). CI installs
-  it itself, so you can skip this until you run evals by hand.
 
 ## The default branch is PR-only
 
-Nothing lands on the default branch except by merged pull request — that's
-what makes `REVIEW.md`'s passes and human approval unskippable rather than
-optional. `.claude/hooks/default-branch-guard.sh` blocks a direct push from
-any Claude session here (escape hatch: `ALLOW_DEFAULT_PUSH=1`, for a human
-who has decided to take that on). Pair it with branch protection on the
-remote for the half a local hook can't cover — see step 8 below.
+Nothing lands on the default branch except by merged pull request. On a solo
+project that isn't about permission — you're the reviewer — it's about
+forcing the diff to be *looked at*, once, in one place, instead of
+accumulating as a string of direct commits nobody ever reads back.
+`.claude/hooks/default-branch-guard.sh` blocks a direct push from any Claude
+session here (escape hatch: `ALLOW_DEFAULT_PUSH=1`, for when you've decided
+to take that on).
+
+If this rule stops paying for itself on some project, delete the hook from
+`.claude/settings.json`. It's a default, not a law.
 
 ## Getting started with a new project
 
@@ -66,38 +66,30 @@ remote for the half a local hook can't cover — see step 8 below.
    offers to scaffold the project too, then fills in every `<placeholder>`
    across `CLAUDE.md`, `README.md`, `REVIEW.md`, and `.claude/hooks/`. If
    you forget, any first message will still trigger it — an unconfigured
-   clone is detected automatically and setup takes over before anything
-   else — but `/bootstrap` is the reliable way to kick it off. Re-run any
-   time (e.g. if the stack changes later). It ends by putting the setup on a
-   `bootstrap-setup` branch and opening a PR — the default branch is PR-only
-   here, and setup is no exception.
+   clone is detected automatically — but `/bootstrap` is the reliable way
+   to kick it off. Re-run any time (e.g. if the stack changes later). It
+   ends by putting the setup on a `bootstrap-setup` branch and opening a
+   PR — the default branch is PR-only here, and setup is no exception.
 4. **Merge that setup PR**, then tell Claude. It pulls the default branch
    and walks you into Stage 1. The merge has to happen first: the
    `.claude/.bootstrapped` marker must be tracked and reachable from the
    default branch, or parallel worktrees look unconfigured and re-bootstrap
    themselves, and any branch you fork before the merge carries the whole
    scaffold in its diff.
-5. **You're in the loop.** Bootstrap shows the six-stage map, asks what you
-   want to build first, and creates and commits your first
-   `intent/<slug>.md` on a new branch with you.
+5. **You're in the loop.** Bootstrap shows the four-stage map, asks what you
+   want to build first, and writes your first `brief/<slug>.md` with you on
+   a new branch.
 6. *(Optional)* set the `ANTHROPIC_API_KEY` secret on the new GitHub repo
-   (Settings → Secrets → Actions) so `.github/workflows/agent-evals.yml`
-   and the PR review workflow can run. Without it both skip cleanly and
-   explain themselves in the run summary — your PRs stay green, they just
-   don't get automated review until you opt in.
-7. *(Optional)* **Trim or extend `.claude/skills/`** for anything
-   project-specific beyond what bootstrap covers — org brand, compliance,
-   or UX policies.
-8. *(Recommended)* **turn on branch protection** for the default branch —
-   require a PR and an approving review. `default-branch-guard.sh` enforces
-   the same rule for Claude sessions in this repo, but only the server side
-   binds everyone, including humans at their own terminal. Note that on
-   github.com this needs a public repo or a paid plan; on a free private
-   repo the hook is the only enforcement you get.
+   (Settings → Secrets → Actions) so `.github/workflows/claude-review.yml`
+   can review your PRs automatically. Without it the workflow skips cleanly
+   and explains itself in the run summary — your PRs stay green, they just
+   don't get automated review until you opt in. `/code-review` in a local
+   session does the same job with no key and no CI minutes.
+7. *(Optional)* **Trim or extend `.claude/skills/`** with anything specific
+   to this project that `CLAUDE.md` is the wrong place for.
 
-Bootstrap deliberately leaves `bands.yaml`, `evals/examples/`, and the
-`intent/`/`design/`/`plans/` templates alone — those fill in from real use,
-not initial setup.
+Bootstrap deliberately leaves the `brief/` and `plans/` templates alone —
+those fill in from real use, not initial setup.
 
 ### Maintaining this skeleton itself
 
@@ -106,100 +98,85 @@ above to work: `gh repo edit <owner>/<repo> --template`, or Settings →
 General → check "Template repository". One-time setup, done once this repo
 is pushed.
 
-## Starting your first piece of work
+## Starting a piece of work
 
 The short version: **run `/sdlc`** and Claude tells you where the current
-branch stands and what to do next, at any point in the cycle. The long
-version is below, once, so you know what it's driving.
+branch stands and what to do next. The long version is below, once, so you
+know what it's driving.
 
-One slug threads through everything — pick a short kebab-case name for the
-initiative (e.g. `csv-export`) and reuse it as the branch name and every
-artifact's filename. Each step's *unlock* is what makes the next step legal;
-don't start a stage whose upstream artifact still says `status: draft`.
+One slug threads through everything — pick a short kebab-case name (e.g.
+`csv-export`) and reuse it as the branch name and every artifact's filename.
 
 1. `git checkout -b <slug>` from the default branch.
-2. **Stage 1.** Copy `intent/TEMPLATE.md` → `intent/<slug>.md`, fill it in
-   (talk it through with Claude if useful), commit.
-   *Unlock:* a product owner reviews it and sets `status: approved`.
-3. **Stage 2.** Ask Claude to draft `design/<slug>.spec.md` from the approved
-   intent. Policy skills apply here — anything they raise lands under **Policy
-   flags** and goes to that policy's owner. Review, adjust, commit.
-   *Unlock:* flags resolved and the product owner sets `status: approved`.
-4. **Stage 3.** Start a Claude Code session in **plan mode** referencing the
-   spec and iterate until the plan's right — see `plans/README.md` for the
-   exact steps — then commit it as `plans/<slug>.plan.md`.
+2. **Stage 1.** Talk the idea through with Claude and land it in
+   `brief/<slug>.md` (copy `brief/TEMPLATE.md`, or let Claude write it).
+   Problem, what done looks like, approach, out of scope. Commit.
+   *Keep it thin* — six honest lines beat two invented pages.
+3. **Stage 2.** Start a Claude Code session in **plan mode** referencing the
+   brief and iterate until the plan's right — see `plans/README.md` — then
+   commit it as `plans/<slug>.plan.md`.
    *Unlock:* the plan is committed. Nothing gets implemented before that.
-5. **Stages 3–4.** Switch to auto mode, implement, and verify against
-   `CLAUDE.md`'s commands. Then hand the change to the `verifier` subagent,
-   which checks the diff against the plan with fresh context.
-   *Unlock:* verification passes and `verifier` reports PASS.
-6. **Stage 5.** Push, open a PR. `REVIEW.md`'s four passes apply here — run
-   `/code-review` yourself before or instead of waiting on the GitHub Action
-   if you want the feedback sooner.
-   *Unlock:* a human approves the merge. Claude's findings are advisory.
-7. **Stage 6.** Merge. If this was a bug fix, the regression test that proved
-   it belongs in `evals/` too — see `evals/README.md`. From here, a breached
-   control band in `bands.yaml` writes the next `intent/*.md` on its own.
+4. **Stage 3.** Switch to auto mode and implement the work order.
+   `simple-code` applies from the first line.
+5. **Stage 4.** Run `CLAUDE.md`'s verification command, then hand the change
+   to the `verifier` subagent, which re-checks the diff against the plan with
+   fresh context. Then `/code-review` (it runs `REVIEW.md`'s passes), push,
+   open a PR, read it, merge it.
 
 Working on more than one of these at a time? See the `worktree` skill
-(`.claude/skills/worktree/SKILL.md`) instead of switching branches in
-place.
+(`.claude/skills/worktree/SKILL.md`) instead of switching branches in place.
 
 ## Repository layout
 
 | Path | Stage | Purpose |
 |---|---|---|
-| `intent/` | 1. Plan | Problem framing, one file per initiative |
-| `design/` | 2. Design | Requirements + design spec derived from an intent |
-| `plans/` | 3. Build | Implementation plans (usually one per branch/PR, committed for audit trail) |
-| `CLAUDE.md` | 3. Build | Institutional knowledge Claude reads every session |
-| `.claude/skills/` | 2–3 | Triggered policy skills (brand, security, compliance, UX) |
-| `.claude/skills/sdlc/` | all | `/sdlc` — reports which stage the branch is in and drives the next handoff |
-| `.claude/hooks/` | 3, 5 | Deterministic guardrails and approval gates |
-| `.claude/agents/` | 3 | Subagents for repeated tasks (verification, review, research) |
-| `.claude/settings.json` | 3, 5 | Wires hooks into tool events |
-| `evals/` | 4. Test | Regression tests for agent configuration itself |
-| `.github/workflows/agent-evals.yml` | 4, 5 | CI that runs evals when `CLAUDE.md`/`.claude/` change |
-| `REVIEW.md` | 5. Deploy | PR review policy Claude applies to every change |
-| `bands.yaml` | 6. Maintain | Control-band thresholds for monitoring → intent.md |
+| `brief/` | 1. Brief | Problem framing + requirements, one file per piece of work |
+| `plans/` | 2. Plan | Implementation plans, one per branch/PR, committed as the audit trail |
+| `CLAUDE.md` | all | Project knowledge Claude reads every session |
+| `.claude/skills/` | 2–3 | Triggered policy skills |
+| `.claude/skills/sdlc/` | all | `/sdlc` — which stage the branch is in, and what's next |
+| `.claude/hooks/` | 3, 4 | Deterministic guardrails and approval gates |
+| `.claude/agents/` | 4 | Subagents for repeated tasks (verification) |
+| `.claude/settings.json` | all | Wires hooks into tool events |
+| `REVIEW.md` | 4. Ship | PR review policy Claude applies to every change |
+| `.github/workflows/claude-review.yml` | 4. Ship | Optional CI that runs `REVIEW.md`'s passes on every PR |
 
 ## Stage-by-stage notes
 
-**1. Plan.** Anyone can start an `intent/*.md` by talking to Claude — no git
-expertise required if you wire up a connector (e.g. via Claude or Cowork) that
-commits on their behalf. A product owner reviews before it advances.
+**1. Brief.** The cheapest stage to be honest in. Write down what's actually
+wrong, what "done" means concretely enough to check later, and — most
+valuable of all — what's explicitly *out* of scope. Skip it only for changes
+genuinely too small to have a scope.
 
-**2. Design.** Claude reads the accepted intent and drafts `design/*.md`,
-constrained by whatever skills encode your policies. Flagged concerns go to
-the policy owner; the product owner approves before build starts.
+**2. Plan.** Start every implementation in plan mode. Commit the plan before
+writing code; that's the artifact Stage 4 compares the diff against. If the
+implementation departs from the plan, update the plan in the same commit
+rather than letting them drift.
 
-**3. Build.** Start every implementation in Claude Code's plan mode. Commit
-the approved plan to `plans/` before writing code — that's your audit trail.
-Run independent streams in separate git worktrees.
+**3. Build.** Run independent streams in separate git worktrees. For bug
+fixes, write and commit the failing test *before* the fix, and don't let the
+agent edit that test while fixing it.
 
-**4. Test.** Wrap verification in one command (`make test`, `npm test`, etc.)
-documented in `CLAUDE.md` with expected healthy output. For bug fixes, write
-and commit the failing test *before* the fix, and don't let the agent edit it
-while fixing. Treat `CLAUDE.md`/`.claude/` changes like code: they get evals
-in CI (see `evals/`), and every production incident becomes a permanent eval.
-
-**5. Deploy.** `REVIEW.md` defines the four passes Claude runs on every PR
-(bugs, security, compliance, simplicity). Hooks act as approval gates for anything
-hard-to-reverse — production deploys, protected-path edits. If you're a
-regulated org, layer in [managed
-settings](https://docs.claude.com/en/docs/claude-code/settings) at the admin
-console level so engineers can't override the gates.
-
-**6. Maintain.** A monitoring script watches SLOs against the bands in
-`bands.yaml`. Breaches past the top band produce a new `intent/*.md` with
-anomaly evidence — closing the loop back to Stage 1. Each incident class
-should also land in `evals/` as a regression test.
+**4. Ship.** Wrap verification in one command (`make test`, `npm test`, …)
+documented in `CLAUDE.md` with its expected healthy output. Then `verifier`,
+then `REVIEW.md`'s passes via `/code-review` or the CI workflow, then a PR
+you actually read before merging. Hooks gate anything hard to reverse —
+production deploys, protected-path edits.
 
 ## What this skeleton deliberately leaves out
 
 - No language/stack is assumed — commands in `CLAUDE.md` and hook scripts are
   placeholders you fill in.
-- No production monitoring script is included (Stage 6's detection script is
-  specific to your metrics stack) — `bands.yaml` just defines the shape.
+- **No approval workflow.** No `status: draft|approved`, no sign-off lines,
+  no roles. You approve things by committing them.
+- **No monitoring loop.** The upstream playbook closes Stage 6 back to Stage
+  1 via SLO control bands and on-call routing. That needs a metrics stack and
+  a rotation; a personal project has neither. When something breaks, you
+  notice, and you write a brief.
+- **No agent-config eval suite.** The playbook regression-tests `CLAUDE.md`
+  and `.claude/**` with a 20–50 task eval suite in CI. That's a real
+  practice, and it's real work to maintain — out of proportion here. The
+  substitute is the "Things Claude gets wrong here" section of `CLAUDE.md`:
+  when a mistake recurs, write it down there.
 - No license file — add one before making the repo public if you intend
   others to reuse it.

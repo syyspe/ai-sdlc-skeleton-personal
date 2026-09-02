@@ -3,12 +3,11 @@
 #
 #   1. Unconfigured clone (no .claude/.bootstrapped) — push the session into
 #      the bootstrap skill.
-#   2. Configured repo — report where the current branch stands in the SDLC
-#      loop and what the next action is. The stage is derived from the
-#      artifact chain itself (which of intent/design/plans exist for the
-#      branch slug, and their "status:" frontmatter), never from separate
-#      state. That's the playbook's automated handoff: an approved intent
-#      unlocks design, an approved spec unlocks plan mode.
+#   2. Configured repo — report where the current branch stands in the loop
+#      and what the next action is. The stage is derived from the artifact
+#      chain itself (which of brief/plans exist for the branch slug), never
+#      from separate state and never from an approval flag: an artifact
+#      exists or it doesn't.
 #
 # Both paths only inject context — this hook never blocks anything, and any
 # probe that can't run (no git, missing dirs) falls back to silence.
@@ -37,14 +36,9 @@ print(json.dumps({"hookSpecificOutput": {
   exit 0
 }
 
-# Frontmatter "status:" value of an artifact, or empty if absent/unreadable.
-status_of() {
-  sed -n '1,12s/^status:[[:space:]]*\([a-z]*\).*/\1/p' "$1" 2>/dev/null | head -1
-}
-
 checklist_line() {
   if [ -f "$1" ]; then
-    printf '  [x] %-34s %s\n' "$1" "$(status_of "$1")"
+    printf '  [x] %s\n' "$1"
   else
     printf '  [ ] %s\n' "$1"
   fi
@@ -55,69 +49,53 @@ slug=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 
 case "$slug" in
   main | master | HEAD)
-    emit "SDLC loop: on the default branch ($slug) — no work stream checked out.
+    emit "Loop status: on the default branch ($slug) — no work stream checked out.
 
-Next: Stage 1 (Plan). Pick a short kebab-case slug for the initiative, run
-git checkout -b <slug>, then fill intent/<slug>.md from intent/TEMPLATE.md.
-That one slug names the branch and every downstream artifact.
+Next: Stage 1 (Brief). Pick a short kebab-case slug, run git checkout -b
+<slug>, then write brief/<slug>.md from brief/TEMPLATE.md. That one slug names
+the branch and the plan that follows it.
 
 $HOWTO"
     ;;
 esac
 
-intent="intent/$slug.md"
-spec="design/$slug.spec.md"
+brief="brief/$slug.md"
 plan="plans/$slug.plan.md"
 
-if [ ! -f "$intent" ] && [ ! -f "$spec" ] && [ ! -f "$plan" ] && [ ! -d intent ]; then
+if [ ! -f "$brief" ] && [ ! -f "$plan" ] && [ ! -d brief ]; then
   exit 0  # not a skeleton layout (or the dirs were removed) — say nothing
 fi
 
 chain=$(
-  checklist_line "$intent"
-  checklist_line "$spec"
+  checklist_line "$brief"
   checklist_line "$plan"
 )
 
-if [ ! -f "$intent" ]; then
-  stage="Stage 1 (Plan) — not started."
-  next="copy intent/TEMPLATE.md to $intent and fill it in with the user
-(Problem, Proposed outcome, Affected systems, Constraints, Open questions),
-then commit it. Committing an approved intent is what unlocks Stage 2."
-elif [ "$(status_of "$intent")" != "approved" ]; then
-  stage="Stage 1 (Plan) — intent drafted, not yet approved."
-  next="the product owner reviews $intent and signs off. Once its frontmatter
-reads status: approved and that is committed, Stage 2 (Design) is unlocked.
-Don't draft the spec before then."
-elif [ ! -f "$spec" ]; then
-  stage="Stage 2 (Design) — intent approved, spec not started."
-  next="draft $spec from the approved intent using design/TEMPLATE.spec.md.
-Policy skills in .claude/skills/ apply here — record anything they raise under
-Policy flags. Review with the user, then commit."
-elif [ "$(status_of "$spec")" != "approved" ]; then
-  stage="Stage 2 (Design) — spec drafted, not yet approved."
-  next="resolve the spec's Policy flags with the relevant policy owner, get
-product-owner approval, then set $spec to status: approved and commit. That
-unlocks Stage 3 (Build)."
+if [ ! -f "$brief" ]; then
+  stage="Stage 1 (Brief) — not started."
+  next="write $brief from brief/TEMPLATE.md with the user (Problem, What done
+looks like, Approach, Out of scope, Open questions), then commit it. Keep it
+thin — a short honest brief beats a padded one. There's no approval step; the
+commit is the handoff to Stage 2."
 elif [ ! -f "$plan" ]; then
-  stage="Stage 3 (Build) — spec approved, no plan yet."
-  next="start in plan mode against $spec and iterate until an engineer who has
-never seen the conversation could implement from the plan alone. Commit it as
-$plan BEFORE writing any code — that's the audit trail Stage 5 review checks
-the diff against."
+  stage="Stage 2 (Plan) — brief committed, no plan yet."
+  next="start in plan mode against $brief and iterate until the plan could be
+implemented from the file alone. Commit it as $plan BEFORE writing any code —
+that's the audit trail Stage 4 review checks the diff against."
 elif [ -n "$(git status --porcelain 2>/dev/null)" ]; then
-  stage="Stage 3 (Build) → Stage 4 (Test) — plan committed, work in progress."
+  stage="Stage 3 (Build) — plan committed, work in progress."
   next="finish the plan's work order, then run the verification command from
-CLAUDE.md and hand the change to the verifier subagent before any human sees
-it. If implementation departed from the plan, update $plan in the same commit."
+CLAUDE.md and hand the change to the verifier subagent. If implementation
+departed from the plan, update $plan in the same commit."
 else
-  stage="Stage 3 (Build) — plan committed, working tree clean."
-  next="implement $plan's work order, or if it's already implemented and
-committed, move to Stage 5: run /code-review (REVIEW.md's four passes), push,
-and open a PR for human approval."
+  stage="Stage 3 (Build) → Stage 4 (Ship) — plan committed, working tree clean."
+  next="implement $plan's work order, or if it's already committed, move to
+Stage 4: verification command, verifier subagent, /code-review (REVIEW.md's
+passes), push, and open a PR. Check git log against the plan's work order
+rather than assuming which of the two it is."
 fi
 
-emit "SDLC loop — branch: $slug
+emit "Loop status — branch: $slug
 
 $chain
 

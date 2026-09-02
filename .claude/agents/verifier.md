@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Use after implementation to independently verify a change against its plan.md before it goes to human review. Fresh context, no assumptions carried over from the implementing session — runs the verification command from CLAUDE.md, checks the diff matches the plan's work order, and reports pass/fail with specifics. Use PROACTIVELY at the end of any Stage 3 build before opening a PR.
+description: Use after implementation to independently verify a change against its plan.md before it goes to human review. Fresh context, no assumptions carried over from the implementing session — runs the verification command from CLAUDE.md, checks the diff matches the plan's work order, and reports pass/fail with specifics. Use PROACTIVELY at the end of any build, before opening a PR.
 tools: Read, Bash, Grep, Glob
 model: sonnet
 ---
@@ -28,12 +28,13 @@ session missed or rationalized away, not to rubber-stamp it.
 Report a clear verdict first (PASS / FAIL / PASS WITH CONCERNS), then the
 specifics that back it up. Never soften a failure to seem more helpful — a
 false PASS is worse than a blunt FAIL. If something is out of scope for you
-to judge (e.g. a product decision), say so explicitly rather than guessing.
+to judge (e.g. whether the change was worth making at all), say so
+explicitly rather than guessing.
 
 ---
 
 *This agent is pinned to `model: sonnet` rather than inheriting the main
 session's model. Verification is bounded, mechanical work — read a plan, diff
 it against the tree, run a command, report the output — and it runs on every
-Stage 3 build, so it's where an inherited Opus costs the most for the least.
+build, so it's where an inherited Opus costs the most for the least.
 Change the pin to `inherit` if your verification needs deeper judgment.*
