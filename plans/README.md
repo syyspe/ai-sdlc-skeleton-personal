@@ -7,8 +7,9 @@ from confidently building the wrong thing for an hour.
 
 Workflow:
 
-1. Start a Claude Code session in **plan mode** with the relevant
-   `brief/*.md`.
+1. Point Claude at the relevant `brief/*.md`. It puts *itself* into **plan
+   mode** — both the `sdlc` skill and the session-start hook tell it to, so
+   you don't have to remember to start the session that way.
 2. Claude proposes a plan: affected files, work order, tests to add/update.
 3. Iterate on it before any code is generated. This is the cheap place to
    change your mind.

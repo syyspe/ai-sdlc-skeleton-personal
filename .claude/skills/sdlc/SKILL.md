@@ -52,10 +52,15 @@ scope, Open questions — one question at a time. Write what they actually
 said. Leave a section thin, or delete it, rather than inventing requirements
 to fill it. Commit it. No approval step follows; the commit is the handoff.
 
-**Stage 2 — Plan.** Start in plan mode against the brief and iterate until
-the plan could be implemented from the file alone, without the conversation
-that produced it. Commit it as `plans/<slug>.plan.md` *before* writing code —
-that commit is what Stage 4 compares the diff against.
+**Stage 2 — Plan.** Call `EnterPlanMode` yourself, as the first action of the
+stage. Don't wait to be asked and don't assume the user started the session in
+plan mode — remembering to flip the mode is the most-forgotten step in the
+loop, and it's yours to remember, not theirs. Then read the brief and iterate
+until the plan could be implemented from the file alone, without the
+conversation that produced it. Once `ExitPlanMode` is approved, write the plan
+into `plans/<slug>.plan.md` in `plans/TEMPLATE.plan.md`'s shape and commit it
+*before* writing code — that commit is what Stage 4 compares the diff
+against.
 
 **Stage 3 — Build.** Implement the work order. `simple-code` applies from the
 first line, not as a cleanup pass afterwards. For a bug fix, commit the
@@ -71,6 +76,22 @@ Bugs, Security, Scope, Simplicity), push the branch, and open a PR:
 `git push -u origin <slug> && gh pr create`. The default branch is PR-only
 and `default-branch-guard.sh` blocks a direct push to it, so there is no
 shortcut here even for a one-line change. The user merges.
+
+## Handing off between stages
+
+Committing a stage's artifact is a clear point, not just a milestone. The
+whole conversation is resent on every turn, so a finished stage's context
+gets paid for again and again — and the stage rules above are re-derivable
+from disk by one hook, so carrying it forward buys almost nothing. See
+`CLAUDE.md`'s Session hygiene section.
+
+So: right after committing `brief/<slug>.md` or `plans/<slug>.plan.md`, say
+the stage is done, name the next action in one line, and suggest picking it
+up in a fresh session. Say it once — if the user would rather keep going,
+keep going.
+
+Stage 3 is also where to suggest `/model sonnet`. The work order is already
+written down by then, and Build is the most turn-dense stage.
 
 ## Rules that don't bend
 
