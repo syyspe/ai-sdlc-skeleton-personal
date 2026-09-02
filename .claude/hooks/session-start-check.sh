@@ -79,9 +79,12 @@ thin — a short honest brief beats a padded one. There's no approval step; the
 commit is the handoff to Stage 2."
 elif [ ! -f "$plan" ]; then
   stage="Stage 2 (Plan) — brief committed, no plan yet."
-  next="start in plan mode against $brief and iterate until the plan could be
-implemented from the file alone. Commit it as $plan BEFORE writing any code —
-that's the audit trail Stage 4 review checks the diff against."
+  next="call the EnterPlanMode tool now, as your first action — don't wait to
+be asked and don't assume the user started the session in plan mode. Then read
+$brief and iterate on the approach until it could be implemented from the file
+alone. Once ExitPlanMode is approved, write the plan to $plan from
+plans/TEMPLATE.plan.md and commit it BEFORE any code — that commit is the audit
+trail Stage 4 review checks the diff against."
 elif [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   stage="Stage 3 (Build) — plan committed, work in progress."
   next="finish the plan's work order, then run the verification command from

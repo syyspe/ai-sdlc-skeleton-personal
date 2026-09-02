@@ -87,3 +87,29 @@ Stages are the default path, not a cage. For a genuinely trivial change — a
 typo, a version bump, a one-line fix with an obvious test — say so and go
 straight to a branch and a PR. Skipping the brief is a judgment call you can
 make out loud; skipping the plan on anything that isn't trivial is not.
+
+## Session hygiene
+
+Every turn resends the whole conversation, so context length is a recurring
+cost, not a one-time one — and Opus-tier tokens weigh about 2.5x Sonnet-tier
+against a subscription's usage limit. The loop above already provides the
+seams; use them.
+
+- **A session per stage, not per feature.** Each committed artifact is a
+  natural clear point. `session-start-check.sh` re-derives the stage from
+  what's on disk, so a fresh session re-orients for almost nothing, while
+  carrying a finished stage's context forward is paid for on every turn that
+  follows. When a stage's artifact lands, say so and suggest starting the
+  next one fresh.
+- **Match the model to the stage.** Stages 1–2 are where the judgment is and
+  are worth the Opus rate. Stage 3 executes a work order that is already
+  written down, and it's the most turn-dense stage — suggest `/model sonnet`
+  when a build starts.
+- **Prefer a subagent to reading.** Anything read into this session is paid
+  for on every later turn; the same read inside a subagent costs one summary.
+  Use `Explore` for "where does X live", and hand verification to `verifier`
+  (pinned to Sonnet) rather than re-reading the diff here.
+- **Don't resume a cold session.** The prompt cache goes stale after roughly
+  an hour, so picking a long session back up after a break re-reads its whole
+  context at full price. Stepping away mid-stage: commit what exists and
+  start fresh later.
