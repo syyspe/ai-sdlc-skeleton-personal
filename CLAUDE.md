@@ -18,8 +18,7 @@ asked and don't ask permission to begin.
 ## Commands
 
 - Build: `<build command>`
-- Test (unit): `<unit test command>`
-- Test (integration): `<integration test command>`
+- Test: `<test command>`
 - Lint: `<lint command>`
 - Format: `<format command>`
 
@@ -49,7 +48,8 @@ Expected healthy output for tests: `<e.g. "N passed, 0 failed">`
 
 ## Working agreement
 
-- Nothing gets implemented without a plan first — see `plans/README.md`.
+- Nothing gets implemented without a committed plan first — see
+  `plans/README.md`.
 - Skills in `.claude/skills/` encode policy — check the relevant one
   before starting work that matches its trigger conditions; don't wait to
   be flagged. In particular: `simple-code` applies to every function and
@@ -58,26 +58,32 @@ Expected healthy output for tests: `<e.g. "N passed, 0 failed">`
   first line, not a checklist for after `verifier` or review catches
   something.
 - Hooks in `.claude/hooks/` are hard guardrails, not suggestions — if one
-  blocks you, that's a signal to ask a human, not to work around it.
+  blocks you, that's a signal to stop and check with me, not to work
+  around it.
 - The default branch is PR-only. Never push to it directly, however small
   the change or however clearly it was asked for — commit on a branch and
-  open a PR. `default-branch-guard.sh` enforces this.
+  open a PR. `default-branch-guard.sh` enforces this. It's a solo repo, so
+  I'm the reviewer; the point is that the diff gets looked at once, in one
+  place, before it lands.
 
 ## The loop
 
-Work moves through six stages. Each ends by committing an artifact, and that
+Work moves through four stages. Each ends by committing an artifact, and that
 commit is what starts the next stage — one kebab-case slug names the branch
 and every artifact on it.
 
 | Stage | Artifact | Unlocked by |
 |---|---|---|
-| 1. Plan | `intent/<slug>.md` | — |
-| 2. Design | `design/<slug>.spec.md` | intent committed as `status: approved` |
-| 3. Build | `plans/<slug>.plan.md`, then code | spec committed as `status: approved` |
-| 4. Test | verification passes, `verifier` PASS | plan committed **before** code |
-| 5. Deploy | PR reviewed per `REVIEW.md`, merged by a human | Stage 4 green |
-| 6. Maintain | `bands.yaml` breach writes the next `intent/*.md` | merged and deployed |
+| 1. Brief | `brief/<slug>.md` | — |
+| 2. Plan | `plans/<slug>.plan.md` | brief committed |
+| 3. Build | code + tests | plan committed **before** code |
+| 4. Ship | PR reviewed per `REVIEW.md`, merged | verification passes, `verifier` PASS |
 
-Never start a stage whose upstream artifact is still `status: draft` —
-waiting on a human approval is the process working. Run the `sdlc` skill
-(`/sdlc`) to see where the current branch stands and what the next action is.
+There are no approval flags to flip — an artifact exists or it doesn't, and
+that's the whole state. Run the `sdlc` skill (`/sdlc`) to see where the
+current branch stands and what the next action is.
+
+Stages are the default path, not a cage. For a genuinely trivial change — a
+typo, a version bump, a one-line fix with an obvious test — say so and go
+straight to a branch and a PR. Skipping the brief is a judgment call you can
+make out loud; skipping the plan on anything that isn't trivial is not.

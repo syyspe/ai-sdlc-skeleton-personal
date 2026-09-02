@@ -1,6 +1,5 @@
 ---
-status: draft # draft | approved | implemented
-spec: design/<matching-file>.spec.md
+brief: brief/<matching-file>.md
 branch: <branch-name>
 date: <YYYY-MM-DD>
 ---
@@ -24,10 +23,11 @@ date: <YYYY-MM-DD>
 
 ## Risks / rollback
 
-Anything hard to reverse, and how to roll back if it goes wrong.
+Anything hard to reverse, and how to undo it. Delete this section if nothing
+here is hard to reverse — most changes aren't.
 
 ---
 
 **Next stage:** commit this plan *before* writing code. Then implement the
 work order, run the verification command above, and hand the change to the
-`verifier` subagent (Stage 4) before opening a PR (Stage 5).
+`verifier` subagent (Stage 4) before opening a PR.

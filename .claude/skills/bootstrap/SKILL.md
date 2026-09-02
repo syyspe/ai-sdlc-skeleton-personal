@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Use at the start of a session in a freshly cloned/templated copy of this skeleton that hasn't been configured yet (no .claude/.bootstrapped file — CLAUDE.md's Setup section names this explicitly). Also user-invocable any time as /bootstrap to redo setup. Walks through project name, purpose, tech stack, and real current versions one question at a time, optionally scaffolds the project for the chosen stack, then fills in every current placeholder across CLAUDE.md, README.md, REVIEW.md, and .claude/hooks/, and finishes by walking the user into Stage 1 — their first intent/<slug>.md.
+description: Use at the start of a session in a freshly cloned/templated copy of this skeleton that hasn't been configured yet (no .claude/.bootstrapped file — CLAUDE.md's Setup section names this explicitly). Also user-invocable any time as /bootstrap to redo setup. Walks through project name, purpose, tech stack, and real current versions one question at a time, optionally scaffolds the project for the chosen stack, then fills in every current placeholder across CLAUDE.md, README.md, REVIEW.md, and .claude/hooks/, and finishes by walking the user into Stage 1 — their first brief/<slug>.md.
 ---
 
 # Bootstrap a new project from this skeleton
@@ -163,6 +163,11 @@ of asking again:
   `.venv/bin/python manage.py test`, dev server = `.venv/bin/python
   manage.py runserver`.
 
+`CLAUDE.md` has one Test command, not a unit/integration split. If the
+project genuinely has two, name the one that must pass before a PR and
+mention the other in the same line — the verifier and Stage 4 need a single
+unambiguous command to run.
+
 Only ask the user directly for a command if it genuinely can't be inferred
 (no manifest present, or stack setup was skipped) — one question for
 whatever's missing, not the whole set.
@@ -188,7 +193,7 @@ Edit:
   here" empty. **Remove the `## Setup` section entirely** — it's a
   one-time trigger and `.claude/.bootstrapped` (written below) makes it
   moot from here on. Leave `## The loop` exactly as it is — its `<slug>` is
-  a variable that gets filled in per initiative, not a setup placeholder.
+  a variable that gets filled in per piece of work, not a setup placeholder.
 - **`README.md`** — replace the title and opening framing with the real
   project name/purpose. Leave the stage-map table and process notes as-is.
 - **`REVIEW.md`** — fill "Excluded paths" with the stack's known
@@ -208,11 +213,11 @@ Edit:
 Deliberately left for real use, not initial setup — don't fabricate
 content for these to seem thorough:
 
-- `bands.yaml` (Stage 6 monitoring thresholds — needs live metrics)
-- `evals/examples/*.json` (Stage 4 — needs a real incident to regress-test)
-- the `intent/`, `design/`, `plans/` **templates** themselves — Step 10
-  copies one of them for the first initiative, but the templates stay
+- the `brief/` and `plans/` **templates** themselves — Step 10 copies
+  `brief/TEMPLATE.md` for the first piece of work, but the templates stay
   exactly as they are
+- `CLAUDE.md`'s "Things Claude gets wrong here" — it fills from real
+  mistakes, and a fabricated entry there is actively misleading
 
 ## Step 9 — write the marker, and open the setup PR
 
@@ -223,8 +228,7 @@ content for these to seem thorough:
 2. Report a short summary *before* committing, so they can object while
    it's cheap: what was scaffolded/installed (with the verified actual
    versions), what was filled in, and what's still deferred (any
-   placeholder you couldn't infer, plus the standing note about
-   `bands.yaml`/`evals`).
+   placeholder you couldn't infer).
 3. **Put the setup on a branch and open a PR.** The default branch is
    PR-only — `default-branch-guard.sh` blocks a direct push, and setup is
    not an exception to the rule it exists to enforce.
@@ -281,21 +285,21 @@ so don't end the session there, walk them into the loop.
 map `CLAUDE.md` and the `sdlc` skill carry):
 
 ```
-1. Plan     intent/<slug>.md          → product owner approves
-2. Design   design/<slug>.spec.md     → product owner approves
-3. Build    plans/<slug>.plan.md      → commit the plan, then write code
-4. Test     verification + verifier   → must be green before review
-5. Deploy   PR per REVIEW.md          → a human approves the merge
-6. Maintain bands.yaml breach         → writes the next intent, loop repeats
+1. Brief  brief/<slug>.md         problem, done-looks-like, out of scope
+2. Plan   plans/<slug>.plan.md    committed BEFORE any code
+3. Build  code + tests            implement the work order
+4. Ship   verifier → PR → merge   you read the diff, you merge it
 ```
 
 Say the three things that make it make sense: one kebab-case slug names the
 branch and every artifact on it; each stage ends by committing its artifact,
 and that commit is what starts the next stage; and the default branch only
 ever moves by merged PR — the setup PR they just merged was the first
-example. Mention that `/sdlc` re-prints this and reports where any branch
-stands, and that the session start message will tell them the same thing
-unprompted.
+example. Add the one thing that is easy to miss: **there is nothing to
+approve.** No `status:` flags, no sign-off lines — an artifact exists or it
+doesn't, and that's the whole state. Mention that `/sdlc` re-prints this and
+reports where any branch stands, and that the session start message will tell
+them the same thing unprompted.
 
 **Then** ask one question, per the one-question-at-a-time rule: *what's the
 first thing you want to build?*
@@ -304,18 +308,19 @@ From their answer:
 
 1. Propose a slug derived from it and confirm it.
 2. `git checkout -b <slug>` from the freshly pulled default branch (so the
-   merged setup is underneath it), then copy `intent/TEMPLATE.md` to
-   `intent/<slug>.md`.
-3. Interview them through the template's sections — Problem, Proposed
-   outcome, Affected systems, Constraints, Open questions — one question per
-   message. Write what they actually said; leave a section thin rather than
-   inventing constraints to fill it. Set `status: draft` and today's date.
+   merged setup is underneath it), then copy `brief/TEMPLATE.md` to
+   `brief/<slug>.md`.
+3. Interview them through the template's sections — Problem, What done looks
+   like, Approach, Out of scope, Open questions — one question per message.
+   Write what they actually said; leave a section thin, or delete it,
+   rather than inventing requirements to fill it. Set the slug and today's
+   date in the frontmatter.
 4. Commit it.
 
-**Then stop.** Tell them the intent is `status: draft`, and that a product
-owner flipping it to `approved` and committing is what unlocks Stage 2 — so
-Design starts in a later session, not this one. Don't draft the spec now,
-however obvious it looks.
+**Then stop.** Tell them the brief is committed and Stage 2 (Plan) is what
+comes next — in a fresh session, in plan mode, against that file. Don't write
+the plan now, however obvious it looks: plan mode with a clean context is the
+point, not a formality.
 
 If they'd rather not start anything yet, that's fine — point at `/sdlc` for
 whenever they do, and end there.

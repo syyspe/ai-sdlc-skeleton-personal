@@ -20,7 +20,7 @@ slug `csv-export` goes at `.../my-project-csv-export`.
 
 Get the repo's directory name with `basename "$(git rev-parse
 --show-toplevel)"`, and the slug from what the user's working on (ask if
-it's not obvious — reuse an existing `intent/`/`plans/` slug if there is
+it's not obvious — reuse an existing `brief/`/`plans/` slug if there is
 one).
 
 ## Creating it
@@ -60,7 +60,7 @@ Then report:
 - The exact command to run next, in a new terminal: `cd <path> && claude`.
 - That it's already fully set up — the marker and all tracked config are
   present, so the new session won't re-run bootstrap, and its own
-  SessionStart check will report the new branch as Stage 1.
+  SessionStart check will report the new branch as Stage 1 (Brief).
 
 ## Cleanup
 

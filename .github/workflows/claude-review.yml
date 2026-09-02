@@ -1,6 +1,6 @@
 name: Claude PR review
 
-# Stage 5 (Deploy): runs the review passes defined in REVIEW.md on every PR,
+# Stage 4 (Ship): runs the review passes defined in REVIEW.md on every PR,
 # and lets authors request fixes by tagging @claude on a review comment.
 #
 # Requires an ANTHROPIC_API_KEY secret (Settings → Secrets and variables →
@@ -23,7 +23,7 @@ permissions:
 jobs:
   review:
     # Full review on new/updated PRs; targeted response when someone tags
-    # @claude on a comment (Stage 5's "response loop").
+    # @claude on a comment (REVIEW.md's "response loop").
     if: >
       github.event_name == 'pull_request' ||
       contains(github.event.comment.body, '@claude')
