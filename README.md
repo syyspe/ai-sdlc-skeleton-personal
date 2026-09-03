@@ -84,7 +84,8 @@ If this rule stops paying for itself on some project, delete the hook from
    can review your PRs automatically. Without it the workflow skips cleanly
    and explains itself in the run summary — your PRs stay green, they just
    don't get automated review until you opt in. `/code-review` in a local
-   session does the same job with no key and no CI minutes.
+   session covers much of the same ground with no key and no CI minutes,
+   though only the CI workflow reads `REVIEW.md` — see that file.
 7. *(Optional)* **Trim or extend `.claude/skills/`** with anything specific
    to this project that `CLAUDE.md` is the wrong place for.
 
@@ -121,8 +122,8 @@ One slug threads through everything — pick a short kebab-case name (e.g.
    nothing gets verified or reviewed here.
 5. **Stage 4.** Fresh session again, in order: `CLAUDE.md`'s verification
    command, the `verifier` subagent (re-checks the diff against the plan with
-   fresh context), `/code-review` for `REVIEW.md`'s passes, then push, open a
-   PR, read it, merge it.
+   fresh context), `/code-review`, `/security-review` if the diff touches a
+   real boundary, then push, open a PR, read it, merge it.
 
 Each of those is a **separate session**. A stage ends at a commit, that commit
 is the whole handoff, and the session-start hook re-derives where you are from
@@ -144,7 +145,7 @@ Working on more than one of these at a time? See the `worktree` skill
 | `.claude/hooks/` | 3, 4 | Deterministic guardrails and approval gates |
 | `.claude/agents/` | 4 | Subagents for repeated tasks (verification) |
 | `.claude/settings.json` | all | Wires hooks into tool events |
-| `REVIEW.md` | 4. Ship | PR review policy Claude applies to every change |
+| `REVIEW.md` | 4. Ship | PR review policy — read by the CI workflow, not by local `/code-review` |
 | `.github/workflows/claude-review.yml` | 4. Ship | Optional CI that runs `REVIEW.md`'s passes on every PR |
 
 ## Stage-by-stage notes
@@ -168,8 +169,8 @@ to break.
 
 **4. Ship.** Wrap verification in one command (`make test`, `npm test`, …)
 documented in `CLAUDE.md` with its expected healthy output. That command, then
-`verifier`, then `REVIEW.md`'s passes via `/code-review` or the CI workflow,
-then a PR you actually read before merging. Hooks gate anything hard to
+`verifier`, then `/code-review` locally and `REVIEW.md`'s passes via the CI
+workflow, then a PR you actually read before merging. Hooks gate anything hard to
 reverse — production deploys, protected-path edits.
 
 ## What this skeleton deliberately leaves out
