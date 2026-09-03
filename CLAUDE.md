@@ -107,7 +107,8 @@ seams; use them.
   session, and stop there: don't take the next stage's first action in the same
   message, and don't offer to. A committed plan is not a go-ahead to start
   building in the planning session, and a committed build is not a go-ahead to
-  start verifying in the build session.
+  start verifying in the build session. Say it once — if I'd rather keep going,
+  keep going.
 - **Match the model to the stage.** Stages 1–2 are where the judgment is and
   are worth the Opus rate. Stage 3 executes a work order that is already
   written down and is the most turn-dense stage; Stage 4 is four mechanical

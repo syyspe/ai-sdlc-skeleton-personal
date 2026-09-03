@@ -28,7 +28,5 @@ here is hard to reverse — most changes aren't.
 
 ---
 
-**Next stage:** commit this plan *before* writing code. Stage 3 implements the
-work order and commits it — that's the whole stage. Stage 4, in a fresh
-session, runs the verification command above, then the `verifier` subagent,
-then `/code-review`, then opens the PR.
+**Next stage:** commit this plan *before* writing code. Run `/sdlc` for what
+follows it.

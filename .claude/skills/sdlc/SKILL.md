@@ -23,10 +23,9 @@ artifact on it.
 | 3. Build | The code and its tests | Code committed |
 | 4. Ship | Verification, review, and a PR | The user reads it and merges |
 
-Every boundary is a commit, and every one is computable from the repo. That is
-deliberate: verification lives at the *head of Stage 4*, not the tail of Stage
-3, because "has this been verified?" is the one question a fresh session
-cannot answer off disk. No boundary is allowed to depend on it.
+Every boundary is a commit, so every one is computable — which is what the
+next section does. (`CLAUDE.md` has why verification sits at the head of Stage
+4 rather than the tail of Stage 3.)
 
 ## Work out where you are
 
@@ -117,14 +116,9 @@ a fresh Build session rather than quietly turning the Ship session into one.
 
 ## Handing off between stages
 
-Every stage ends at a commit, and every one of those commits is a clear point,
-not just a milestone. The whole conversation is resent on every turn, so a
-finished stage's context gets paid for again and again — and the stage rules
-above are re-derivable from disk by one hook, so carrying it forward buys
-almost nothing. See `CLAUDE.md`'s Session hygiene section.
-
-There are three boundaries, and the default at all three is **end the
-session**:
+Three boundaries, and the default at all three is **end the session** — why
+that's worth doing is `CLAUDE.md`'s Session hygiene section; this is the
+mechanics.
 
 | Stage ends when | Next session |
 |---|---|
@@ -132,14 +126,9 @@ session**:
 | `plans/<slug>.plan.md` committed | Stage 3 — Build, `/model sonnet` |
 | Code committed | Stage 4 — Ship: verify, `verifier`, `/code-review`, PR |
 
-At each one: say the stage is done, name the next action in one line, suggest
-picking it up fresh — and stop there. Don't take the next stage's first action
-in the same message, and don't offer to take it in this session. Say it once;
-if the user would rather keep going, keep going.
-
-`/model sonnet` belongs with the Build handoff, and stays on for Ship. The
-work order is written down by then; Build is the most turn-dense stage, and
-Ship is four mechanical steps that mostly delegate to a subagent and a skill.
+At each one, follow the handoff rule in `CLAUDE.md`'s Session hygiene: stage
+done, next action named in one line, fresh session suggested, stop there.
+`/model sonnet` belongs with the Build handoff and stays on for Ship.
 
 ## Rules that don't bend
 

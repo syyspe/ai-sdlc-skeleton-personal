@@ -29,7 +29,5 @@ alone, without the conversation that produced it. If the implementation
 departs from the plan, update the plan in the same commit — a plan that
 silently drifts from the code is worse than no plan.
 
-**Next:** Stage 3 (Build) in a fresh session — implement and commit, and that's
-the whole stage. Stage 4 (Ship) is a fresh session again, in order: the
-verification command from `CLAUDE.md`, the `verifier` subagent,
-`/code-review`, push, PR. Run `/sdlc` if you're unsure where a branch stands.
+**Next:** Stage 3 (Build), in a fresh session — implement and commit, and
+that's the whole stage. Run `/sdlc` for what follows it.
