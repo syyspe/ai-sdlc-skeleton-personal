@@ -7,11 +7,9 @@
 #      and what the next action is. The stage is derived from the artifact
 #      chain itself — which of brief/plan exist for the branch slug, and
 #      whether code has landed since the plan commit — never from separate
-#      state and never from an approval flag: an artifact exists or it
-#      doesn't. Every boundary in the loop is computable here, which is why
-#      verification lives at the head of Stage 4 rather than the tail of
-#      Stage 3: "has it been verified?" is the one question a fresh session
-#      cannot answer off disk, so no boundary is allowed to depend on it.
+#      state and never from an approval flag. Every boundary is computable
+#      here; CLAUDE.md's "The loop" says why that constraint drives where
+#      verification sits.
 #
 # Both paths only inject context — this hook never blocks anything, and any
 # probe that can't run (no git, missing dirs) falls back to silence.
@@ -29,7 +27,9 @@ fi
 HOWTO="Orientation, not a script to recite: if the user opens with something \
 open-ended (what next, let's continue, hi), lead with the stage and next \
 action in at most two lines. Otherwise hold this as context and answer what \
-was asked. The sdlc skill has the full loop map and the exact commands."
+was asked. The line above is the imperative only — the sdlc skill has the full \
+loop map, the exact commands, and the reasoning behind each stage. Read it \
+before departing from the next action named here."
 
 emit() {
   MSG="$1" python3 -c 'import json, os
@@ -93,46 +93,34 @@ chain=$(
   fi
 )
 
+# One imperative per state. The reasoning behind each lives in the sdlc skill,
+# which HOWTO points at — repeating it here is what let the two drift apart.
 if [ ! -f "$brief" ]; then
   stage="Stage 1 (Brief) — not started."
-  next="write $brief from brief/TEMPLATE.md with the user (Problem, What done
-looks like, Approach, Out of scope, Open questions), then commit it. Keep it
-thin — a short honest brief beats a padded one. There's no approval step; the
-commit is the handoff to Stage 2."
+  next="write $brief from brief/TEMPLATE.md, interviewing the user one question
+at a time, then commit it. That commit ends the stage."
 elif [ ! -f "$plan" ]; then
   stage="Stage 2 (Plan) — brief committed, no plan yet."
-  next="call the EnterPlanMode tool now, as your first action — don't wait to
-be asked and don't assume the user started the session in plan mode. Then read
-$brief and iterate on the approach until it could be implemented from the file
-alone. Once ExitPlanMode is approved, write the plan to $plan from
-plans/TEMPLATE.plan.md and commit it BEFORE any code — that commit is the audit
-trail Stage 4 review checks the diff against. Then stop: the commit ends the
-stage. Approving ExitPlanMode approves the plan, not a go-ahead to build now —
-don't start the work order in this session. Say the plan is committed, name its
-first step, and suggest picking Build up in a fresh session with /model
-sonnet."
+  next="call the EnterPlanMode tool now, as your first action. Read $brief and
+iterate, then write $plan from plans/TEMPLATE.plan.md and commit it BEFORE any
+code. Stop there — approving ExitPlanMode approves the plan, it is not a
+go-ahead to build in this session."
 elif [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   stage="Stage 3 (Build) — plan committed, work in progress."
-  next="finish $plan's work order and commit it. If the implementation departed
-from the plan, update $plan in the same commit. The commit ends the stage —
-verification, the verifier subagent, /code-review and the PR are all Stage 4,
-in a fresh session. Don't run them here."
+  next="finish $plan's work order and commit it; if the implementation departed
+from the plan, update $plan in the same commit. That commit ends the stage.
+Verification, verifier, /code-review and the PR are Stage 4 — don't run them
+here."
 elif [ -z "$code" ]; then
   stage="Stage 3 (Build) — plan committed, no code yet."
-  next="implement $plan's work order and commit it. simple-code applies from
-the first line, not as a cleanup pass. That commit is this session's whole job
-and the end of the stage — verification and review are Stage 4, in a fresh
-session."
+  next="implement $plan's work order and commit it — simple-code applies from
+the first line. That commit is this session's whole job and ends the stage."
 else
   stage="Stage 4 (Ship) — code committed since the plan."
-  next="verify, then review, then ship — all in this session, in order: (1) run
-the verification command from CLAUDE.md and report its real output; (2) call
-the verifier subagent, which re-checks the diff against $plan with fresh
-context; (3) /code-review for REVIEW.md's passes; (4) git push -u origin $slug
-&& gh pr create. Steps 1-4 are one continuous sequence — don't stop between
-them to ask how to proceed. If verification or the verifier fails, fixing it is
-the job now; a substantial fix means going back to a Stage 3 session for it.
-The user reviews the PR and merges."
+  next="run these four in order, as one continuous sequence, without stopping
+to ask in between: (1) the verification command from CLAUDE.md, reporting its
+real output; (2) the verifier subagent, against $plan; (3) /code-review; (4)
+git push -u origin $slug && gh pr create. The user reviews and merges."
 fi
 
 emit "Loop status — branch: $slug
