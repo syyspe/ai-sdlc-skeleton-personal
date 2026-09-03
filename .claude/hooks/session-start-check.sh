@@ -92,17 +92,27 @@ sonnet."
 elif [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   stage="Stage 3 (Build) — plan committed, work in progress."
   next="finish the plan's work order, then run the verification command from
-CLAUDE.md and hand the change to the verifier subagent. If implementation
-departed from the plan, update $plan in the same commit. Once the code is
-committed, verification is green and the verifier reports PASS, the stage is
-over — /code-review, push and the PR are Stage 4, in a fresh session."
+CLAUDE.md and call the verifier subagent yourself, as the next tool call, in
+this same session — do not stop between the verification command and calling
+verifier to ask how to proceed; both are still Stage 3, not a stage handoff.
+If implementation departed from the plan, update $plan in the same commit.
+Once the code is committed, verification is green and the verifier reports
+PASS, the stage is over — /code-review, push and the PR are Stage 4, in a
+fresh session."
 else
   stage="Stage 3 (Build) → Stage 4 (Ship) — plan committed, working tree clean."
-  next="implement $plan's work order, or if it's already committed and verified,
-run Stage 4 here: /code-review (REVIEW.md's passes), push, and open a PR. Check
-git log against the plan's work order rather than assuming which of the two it
-is. If it's the build that's still to do, that's this session's whole job —
-end it once the verifier reports PASS and leave Stage 4 to a fresh one."
+  next="implement $plan's work order, or if it's already committed, run
+verification and call the verifier subagent yourself right now if you have no
+record in this conversation that verifier already passed — a clean tree alone
+doesn't prove verification happened, there's no artifact for that, so when in
+doubt redo it rather than assuming. Running verification and calling verifier
+are not a stage handoff, so don't stop between them to ask; do them back to
+back. Once verifier reports PASS, that IS the Stage 3 → 4 handoff: say so, name
+/code-review as the next action, and stop — leave Stage 4 itself to a fresh
+session, same as always. Check git log against the plan's work order rather
+than assuming which of the two it is. If it's the build that's still to do,
+that's this session's whole job — end it once the verifier reports PASS and
+leave Stage 4 to a fresh one."
 fi
 
 emit "Loop status — branch: $slug

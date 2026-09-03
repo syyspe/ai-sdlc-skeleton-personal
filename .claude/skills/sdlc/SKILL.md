@@ -79,10 +79,17 @@ same commit rather than letting them drift.
 
 The stage ends when the code is committed, the verification command from
 `CLAUDE.md` runs green, and the `verifier` subagent — fresh context, checks the
-diff against the plan — reports PASS. Fix what it finds, then stop. Review and
-the PR are Stage 4. Don't run `/code-review` here: it reads the diff off disk,
-so it gains nothing from this session's context and pays full price for it, and
-a build session is the worst-placed reviewer of its own build.
+diff against the plan — reports PASS. Committing, verifying, and calling
+`verifier` are three steps inside this one stage, not three things to check in
+with the user between — run the verification command, then call `verifier` as
+your very next tool call, in this same session, with no stop to ask "how would
+you like to proceed" in between. The only handoff point in Stage 3 is its end:
+verifier PASS. (Careful with the word — "call the verifier subagent" means a
+tool call right now; "hand off between stages" elsewhere in this file means end
+the session. They are not the same move.) Fix what `verifier` finds, then stop.
+Review and the PR are Stage 4. Don't run `/code-review` here: it reads the diff
+off disk, so it gains nothing from this session's context and pays full price
+for it, and a build session is the worst-placed reviewer of its own build.
 
 **Stage 4 — Ship.** A fresh session, opening on a clean tree with the build
 committed. Run `/code-review` (it applies `REVIEW.md`'s passes: Bugs,
@@ -127,9 +134,12 @@ by then, and Build is the most turn-dense stage.
 - One session, one stage. A stage ends where the table above says it ends,
   and the next stage's first action belongs to the next session. Suggest the
   handoff instead of starting the work and mentioning the handoff afterwards.
-- Don't run several stages together unasked. Report where things stand
-  compactly — a status line and the next action — then offer to do that next
-  step, and do it once the user agrees.
+- Don't run several *stages* together unasked. Report where things stand
+  compactly — a status line and the next action — then offer to move to the
+  next stage, and do it once the user agrees. This is about stage transitions
+  (Build → Ship, etc.), not the individual steps inside a stage — running the
+  verification command and then calling `verifier` are both still Stage 3;
+  don't stop between them to ask.
 - For a genuinely trivial change (typo, version bump, one-line fix with an
   obvious test), say so and go straight to a branch and a PR. Skipping the
   brief is a judgment call to make out loud. Skipping the plan on anything
