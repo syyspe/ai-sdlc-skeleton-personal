@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook (Bash): blocks pushes to the default branch. This repo is
 # PR-only — the default branch advances by merge, never by direct push, so
-# every change gets REVIEW.md's passes and a look from you before it lands.
+# every change gets reviewed and a look from you before it lands.
 #
 # This is the local half of that policy. The server-side half is branch
 # protection (or a ruleset) on the remote; set it up if your GitHub plan
