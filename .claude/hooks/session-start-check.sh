@@ -5,9 +5,13 @@
 #      the bootstrap skill.
 #   2. Configured repo — report where the current branch stands in the loop
 #      and what the next action is. The stage is derived from the artifact
-#      chain itself (which of brief/plans exist for the branch slug), never
-#      from separate state and never from an approval flag: an artifact
-#      exists or it doesn't.
+#      chain itself — which of brief/plan exist for the branch slug, and
+#      whether code has landed since the plan commit — never from separate
+#      state and never from an approval flag: an artifact exists or it
+#      doesn't. Every boundary in the loop is computable here, which is why
+#      verification lives at the head of Stage 4 rather than the tail of
+#      Stage 3: "has it been verified?" is the one question a fresh session
+#      cannot answer off disk, so no boundary is allowed to depend on it.
 #
 # Both paths only inject context — this hook never blocks anything, and any
 # probe that can't run (no git, missing dirs) falls back to silence.
@@ -66,9 +70,27 @@ if [ ! -f "$brief" ] && [ ! -f "$plan" ] && [ ! -d brief ]; then
   exit 0  # not a skeleton layout (or the dirs were removed) — say nothing
 fi
 
+# Has code landed since the plan was committed? Dated from the commit that
+# ADDED the plan, not the last one to touch it — a build session is told to
+# amend the plan in the same commit as the code it drifted from, and dating
+# from that would hide the very code it's meant to detect.
+code=""
+if [ -f "$plan" ]; then
+  plan_commit=$(git log --diff-filter=A --format=%H -1 -- "$plan" 2>/dev/null)
+  if [ -n "$plan_commit" ]; then
+    code=$(git log --format=%H "$plan_commit"..HEAD -- . \
+      ':(exclude)brief' ':(exclude)plans' 2>/dev/null)
+  fi
+fi
+
 chain=$(
   checklist_line "$brief"
   checklist_line "$plan"
+  if [ -n "$code" ]; then
+    printf '  [x] code committed\n'
+  else
+    printf '  [ ] code committed\n'
+  fi
 )
 
 if [ ! -f "$brief" ]; then
@@ -91,18 +113,26 @@ first step, and suggest picking Build up in a fresh session with /model
 sonnet."
 elif [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   stage="Stage 3 (Build) — plan committed, work in progress."
-  next="finish the plan's work order, then run the verification command from
-CLAUDE.md and hand the change to the verifier subagent. If implementation
-departed from the plan, update $plan in the same commit. Once the code is
-committed, verification is green and the verifier reports PASS, the stage is
-over — /code-review, push and the PR are Stage 4, in a fresh session."
+  next="finish $plan's work order and commit it. If the implementation departed
+from the plan, update $plan in the same commit. The commit ends the stage —
+verification, the verifier subagent, /code-review and the PR are all Stage 4,
+in a fresh session. Don't run them here."
+elif [ -z "$code" ]; then
+  stage="Stage 3 (Build) — plan committed, no code yet."
+  next="implement $plan's work order and commit it. simple-code applies from
+the first line, not as a cleanup pass. That commit is this session's whole job
+and the end of the stage — verification and review are Stage 4, in a fresh
+session."
 else
-  stage="Stage 3 (Build) → Stage 4 (Ship) — plan committed, working tree clean."
-  next="implement $plan's work order, or if it's already committed and verified,
-run Stage 4 here: /code-review (REVIEW.md's passes), push, and open a PR. Check
-git log against the plan's work order rather than assuming which of the two it
-is. If it's the build that's still to do, that's this session's whole job —
-end it once the verifier reports PASS and leave Stage 4 to a fresh one."
+  stage="Stage 4 (Ship) — code committed since the plan."
+  next="verify, then review, then ship — all in this session, in order: (1) run
+the verification command from CLAUDE.md and report its real output; (2) call
+the verifier subagent, which re-checks the diff against $plan with fresh
+context; (3) /code-review for REVIEW.md's passes; (4) git push -u origin $slug
+&& gh pr create. Steps 1-4 are one continuous sequence — don't stop between
+them to ask how to proceed. If verification or the verifier fails, fixing it is
+the job now; a substantial fix means going back to a Stage 3 session for it.
+The user reviews the PR and merges."
 fi
 
 emit "Loop status — branch: $slug
