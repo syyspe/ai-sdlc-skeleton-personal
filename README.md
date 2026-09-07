@@ -85,7 +85,9 @@ If this rule stops paying for itself on some project, delete the hook from
    and explains itself in the run summary — your PRs stay green, they just
    don't get automated review until you opt in. `/review` in a local session
    covers the same `REVIEW.md` passes with no key and no CI minutes — see
-   that file.
+   that file. Note that the key is billed to whoever owns it: turning this on
+   means you pay for a review of every PR on that repo. It's opt-in per repo
+   for that reason, rather than something bootstrap switches on for you.
 7. *(Optional)* **Trim or extend `.claude/skills/`** with anything specific
    to this project that `CLAUDE.md` is the wrong place for.
 
@@ -189,5 +191,12 @@ gate anything hard to reverse — production deploys, protected-path edits.
   practice, and it's real work to maintain — out of proportion here. The
   substitute is the "Things Claude gets wrong here" section of `CLAUDE.md`:
   when a mistake recurs, write it down there.
-- No license file — add one before making the repo public if you intend
-  others to reuse it.
+
+## License
+
+[MIT](LICENSE). Copy it, fork it, sell whatever you build with it.
+
+`LICENSE` gets copied into every repo made from this template, which is
+almost certainly not what you want downstream — **replace it with your own
+before your project goes anywhere.** The scaffolding here isn't the part
+you'll want to license to anyone.
