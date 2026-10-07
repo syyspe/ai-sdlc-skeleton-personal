@@ -24,6 +24,8 @@ Expected healthy output for tests: `<e.g. "N passed, 0 failed">`
 - Errors: not decided yet. The first plan that adds a boundary (an endpoint,
   a CLI command, external I/O) decides the contract and replaces this line;
   see the `error-handling` skill.
+- Logging: not decided yet. Decided in the same plan as `Errors:`, and
+  replaces this line; see the `logging` skill.
 
 ## Architecture
 
@@ -52,7 +54,8 @@ Expected healthy output for tests: `<e.g. "N passed, 0 failed">`
   limits and no-cleverness/no-defensive-code rules are active from the
   first line, not a checklist for after `verifier` or review catches
   something. `error-handling` applies the same way to any code that can
-  fail, and the `Errors:` line above is the contract it keeps consistent.
+  fail, and the `Errors:` line above is the contract it keeps consistent;
+  `logging` likewise for anything that logs, against the `Logging:` line.
 - Hooks in `.claude/hooks/` are hard guardrails, not suggestions — if one
   blocks you, that's a signal to stop and check with me, not to work
   around it.
