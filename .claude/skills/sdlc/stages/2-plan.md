@@ -40,6 +40,11 @@ skill: list the failure cases under Tests. If `CLAUDE.md`'s `Errors:` line
 says the contract isn't decided, decide it in this plan — and the `Logging:`
 contract with it, per the `logging` skill.
 
+If the plan adds or reshapes UI, use the `frontend-design` skill when the
+session lists it. If `CLAUDE.md`'s `UI:` line says the visual direction isn't
+decided, decide it under the plan's Contracts, so the build session follows a direction
+instead of inventing one.
+
 Once `ExitPlanMode` is approved, write the plan into `plans/<slug>.plan.md` in
 `plans/TEMPLATE.plan.md`'s shape and commit it.
 
