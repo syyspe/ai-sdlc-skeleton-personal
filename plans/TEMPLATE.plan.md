@@ -24,6 +24,14 @@ date: <YYYY-MM-DD>
 Delete this section unless `CLAUDE.md` still says these are not decided and
 this plan adds the first boundary.
 
+## Parallel streams
+
+- `<other slug>` — `<what overlaps>`; `<sequence | extract | merge>`:
+  `<what that means for this plan>`
+
+Delete this section if no stream in flight overlaps this plan's Affected
+files or contracts.
+
 ## Tests
 
 - New: `<test to add>`
