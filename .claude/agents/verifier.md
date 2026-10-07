@@ -34,7 +34,7 @@ session missed or rationalized away, not to rubber-stamp it.
 2. **Diff against the plan.** Compare the changed files to the plan's
    "Affected files" list. Flag anything changed that wasn't planned, and
    anything planned that wasn't done. Pull the full diff only for the files
-   the plan names — `git diff HEAD -- <paths>` — and never `cat` a file the
+   the plan names — `git diff "$base" -- <paths>` — and never `cat` a file the
    diff already showed you.
 3. **Run verification.** Run the exact command from `CLAUDE.md`'s Commands
    section, capped: `<command> 2>&1 | tail -60`. Report the actual result,
