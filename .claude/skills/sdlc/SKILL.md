@@ -13,17 +13,45 @@ branch are the state.**
 
 One slug names the branch and every artifact on it: a three-digit sequence
 number plus a short kebab-case name (e.g. `007-csv-export`), so `brief/` and
-`plans/` list in the order the work was started. The number is one more than
-the highest already taken — by a brief on the default branch or by any
-branch, local or remote, so parallel streams don't collide:
+`plans/` list in the order the briefs were written. The number is one more
+than the highest already taken — by a branch name or by a brief on any
+branch, local or remote, so parallel streams and an open backlog PR don't
+collide:
 
 ```bash
 git fetch --quiet origin
-{ git ls-tree --name-only origin/HEAD brief/; git branch -a --format='%(refname:short)'; } \
+git for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
+  | while read -r ref; do echo "$ref"; git ls-tree --name-only "$ref" brief/; done \
   | sed -nE 's#^(.*/)?([0-9]{3})-.*#\2#p' | sort -n | tail -1
 ```
 
 No output → `001`.
+
+## Which streams exist
+
+The same rule holds across streams: their state is read off git, never
+stored in a status field.
+
+```bash
+git fetch --quiet origin
+bash .claude/skills/sdlc/streams.sh
+```
+
+One line per slug: **done** (its plan is on the default branch — only a
+merged PR puts it there), **in progress** (a branch named for it exists, with
+the stage read off that branch), or **not started** (its brief is on the
+default branch and nothing else is). The script's header says why done is
+checked first.
+
+**Backlog.** To write briefs now and start them later, write them on a
+branch named `backlog-<short-name>` (no number: it orders nothing itself),
+each brief taking its own number, and open a PR. That session is Stage 1
+only — no plans, no code — and ships by Stage 4's light path. Once merged,
+each brief shows as not started.
+
+**Dropping a brief.** Delete `brief/<slug>.md` in a PR (a backlog PR is
+fine); history keeps it. If its branch exists, delete that too, or it keeps
+showing as in progress. Don't add a status field for it.
 
 | Stage | Artifact | Instructions | Ends when | Next session |
 |---|---|---|---|---|
@@ -42,7 +70,8 @@ Why the process is shaped this way: `session-economy.md` in this directory.
 Read it off the branch, in this order — first match wins:
 
 1. `git rev-parse --abbrev-ref HEAD`. On `main`/`master`, no work stream is
-   checked out: the next action is Stage 1 on a new branch.
+   checked out: see Stage 0 below. On `backlog-*`, this is a backlog
+   session — see "Which streams exist".
 2. Otherwise the branch name is the slug. An artifact counts only once it is
    committed: `git cat-file -e HEAD:<path>` succeeds for `brief/<slug>.md`
    and `plans/<slug>.plan.md`. An artifact not in `HEAD` → you are in the
@@ -64,9 +93,17 @@ rules once per session and names the stage file. Re-derive them here rather
 than trusting a stale reading from the top of the conversation — a commit
 landing mid-session moves the branch to the next stage.
 
-**Stage 0 — nothing started.** Take the next number, agree the name part of
-the slug with the user, then
-`git checkout -b <slug>`. Running two streams at once? Use the `worktree`
+**Stage 0 — nothing checked out.** Run "Which streams exist" above. If any
+brief is not started, offer those first, lowest number first, alongside the
+option of a new one — the user picks:
+
+- **A not-started brief** — `git checkout -b <slug> origin/HEAD`. Its brief
+  is already committed, so the branch opens at Stage 2.
+- **A new one** — take the next number, agree the name part of the slug with
+  the user, then `git checkout -b <slug>`. Stage 1.
+
+Never start a slug that is already in progress: that stream has a branch,
+and probably a session. Running two streams at once? Use the `worktree`
 skill instead of switching branches in place.
 
 ## Handing off between stages

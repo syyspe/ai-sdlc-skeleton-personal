@@ -20,8 +20,13 @@ slug `007-csv-export` goes at `.../my-project-007-csv-export`.
 
 Get the repo's directory name with `basename "$(git rev-parse
 --show-toplevel)"`, and the slug from what the user's working on (ask if
-it's not obvious — reuse an existing `brief/`/`plans/` slug if there is
-one; a new one takes the next number, per the sdlc skill).
+it's not obvious). The sdlc skill's `streams.sh` lists the briefs not
+started yet: reuse one of those slugs if it fits; a new one takes the next
+number, per the sdlc skill. Never reuse a slug that's in progress.
+
+A not-started brief is already on the default branch, so base its branch
+there: `git worktree add ../<repo-dir-name>-<slug> -b <slug> origin/HEAD`.
+It opens at Stage 2, not Stage 1.
 
 ## Creating it
 
@@ -74,7 +79,8 @@ Then report:
 - The exact command to run next, in a new terminal: `cd <path> && claude`.
 - That it's already fully set up — the marker and all tracked config are
   present, so the new session won't re-run bootstrap, and its own
-  SessionStart check will report the new branch as Stage 1 (Brief).
+  SessionStart check will report the new branch as Stage 1 (Brief), or
+  Stage 2 (Plan) for a brief from the backlog.
 
 ## Cleanup
 
