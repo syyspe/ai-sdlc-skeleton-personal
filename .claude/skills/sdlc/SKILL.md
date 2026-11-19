@@ -56,8 +56,8 @@ showing as in progress. Don't add a status field for it.
 | Stage | Artifact | Instructions | Ends when | Next session |
 |---|---|---|---|---|
 | 1. Brief | `brief/<slug>.md` | `stages/1-brief.md` | Brief committed | Stage 2 — in plan mode |
-| 2. Plan | `plans/<slug>.plan.md` | `stages/2-plan.md` | Plan committed **before** any code | Stage 3 — `/model sonnet`, auto mode |
-| 3. Build | The code and its tests | `stages/3-build.md` | Code committed | Stage 4 — still `/model sonnet` |
+| 2. Plan | `plans/<slug>.plan.md` | `stages/2-plan.md` | Plan committed **before** any code | Stage 3 — auto mode |
+| 3. Build | The code and its tests | `stages/3-build.md` | Code committed | Stage 4 |
 | 4. Ship | Verification, review, and a PR | `stages/4-ship.md` | The user reads the PR and merges | — |
 
 Paths are relative to this skill's directory. **Read only the stage file you
@@ -109,7 +109,7 @@ skill instead of switching branches in place.
 ## Handing off between stages
 
 At each "Ends when" in the table: say the stage is done, name the next action
-in one line, suggest a fresh session (with the table's model and mode), and
+in one line, suggest a fresh session (in the table's mode), and
 stop there. Don't take the next stage's first action in the same message, and
 don't offer to. Say it once — if the user would rather keep going, keep going.
 

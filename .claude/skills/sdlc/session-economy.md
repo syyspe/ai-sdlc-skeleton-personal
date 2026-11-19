@@ -7,8 +7,8 @@ whether to break one.
 ## Why each stage gets its own session
 
 Every turn resends the whole conversation, so context length is a recurring
-cost, not a one-time one — and Opus-tier tokens weigh about 2.5x Sonnet-tier
-against a subscription's usage limit. A stage's context is fully spent once
+cost, not a one-time one, counted against a subscription's usage limit. A
+stage's context is fully spent once
 its artifact is committed; carrying it into the next stage means paying for it
 on every turn that follows, forever.
 
@@ -17,11 +17,9 @@ on every turn that follows, forever.
   what's on disk, so a fresh session re-orients for almost nothing.
 - **Read only the stage file you land in.** A session works one stage; the
   other three stage files would be dead weight for the rest of it.
-- **Match the model to the stage.** Stages 1–2 are where the judgment is and
-  are worth the Opus rate. Stage 3 executes a work order that is already
-  written down and is the most turn-dense stage; Stage 4 is five mechanical
-  steps that mostly delegate. `/model sonnet` at the Build handoff, and leave
-  it there through Ship.
+- **One model for the whole loop.** No stage switches to a cheaper model.
+  A stronger model gets a stage done in fewer turns with fewer bugs to send
+  back, which costs less than the per-token saving of a weaker one.
 - **Prefer reading to a subagent.** Sessions here are short, a few turns
   each, so a file read into the main session is resent only a handful of
   times. A subagent starts cold and re-derives context the session already

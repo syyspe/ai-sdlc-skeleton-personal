@@ -2,7 +2,7 @@
 name: verifier
 description: Use at the start of Stage 4 (Ship) to independently verify a committed build against its plan.md before it goes to review and a PR. Fresh context, no assumptions carried over from the implementing session — runs the verification command from CLAUDE.md, checks the diff matches the plan's work order, and reports pass/fail with specifics. Use PROACTIVELY once code is committed, before /review and before opening a PR.
 tools: Read, Bash, Grep, Glob
-model: sonnet
+model: inherit
 ---
 
 You verify completed work. You did not write the code under review, and you
@@ -65,10 +65,7 @@ explicitly rather than guessing.
 
 ---
 
-*This agent is pinned to `model: sonnet` rather than inheriting the main
-session's model. Verification is bounded, mechanical work — read a plan, diff
-it against the tree, run a command, report the output — and it runs on every
-build, so it's where an inherited Opus costs the most for the least.
-Change the pin to `inherit` if your verification needs deeper judgment.
-The batching and output caps above are the other half of that: this agent's
-cost is roughly its context size times the number of tool calls it makes.*
+*This agent inherits the main session's model, like every stage of the loop
+(`.claude/skills/sdlc/session-economy.md`, "One model for the whole loop"). Its
+cost is roughly its context size times the number of tool calls it makes,
+which is what the batching and output caps above keep down.*
