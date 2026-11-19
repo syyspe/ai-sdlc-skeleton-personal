@@ -10,4 +10,9 @@ inventing requirements to fill it.
 
 Commit it. That commit ends the stage.
 
+On a `backlog-*` branch (`SKILL.md` "Which streams exist"), write as many
+briefs as the user has, each under its own number, and commit them. Then,
+instead of the handoff, ship the branch by Stage 4's light path — the
+briefs only count once they're on the default branch.
+
 Then hand off: `SKILL.md` "Handing off".

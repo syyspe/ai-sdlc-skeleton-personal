@@ -41,7 +41,7 @@ check() {
     'import json, sys
 print(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"])')
 
-  if printf '%s' "$context" | grep -qF -- "$expected"; then
+  if [[ "$context" == *"$expected"* ]]; then
     pass=$((pass + 1))
   else
     fail=$((fail + 1))
@@ -74,6 +74,40 @@ check 'Stage 4 (Ship)'
 
 git -C "$repo" checkout -q master
 check 'on the default branch'
+check 'Not started:
+  none'
+
+# Stream states on the default branch, via streams.sh: one done, one in
+# progress, one waiting. The test repo has no origin, so streams.sh falls
+# back to the local master.
+mkdir -p "$repo/.claude/skills/sdlc" "$repo/brief" "$repo/plans"
+cp "$(dirname "$HOOK")/../skills/sdlc/streams.sh" "$repo/.claude/skills/sdlc/"
+echo brief >"$repo/brief/001-done.md"
+echo plan >"$repo/plans/001-done.plan.md"
+echo brief >"$repo/brief/002-active.md"
+echo brief >"$repo/brief/003-waiting.md"
+commit "merged stream and backlog"
+git -C "$repo" branch 001-done  # a squash-merged branch nobody deleted
+git -C "$repo" checkout -q -b 002-active
+check 'Stage 2 (Plan) — brief committed, no plan yet.'
+echo plan >"$repo/plans/002-active.plan.md"
+commit plan
+git -C "$repo" checkout -q master
+
+check 'Not started:
+  003-waiting
+In progress:
+  002-active — Stage 3 (Build) (002-active)'
+check 'start a not-started brief'
+if [[ "$context" == *001-done* ]]; then
+  fail=$((fail + 1))
+  printf 'FAIL: done stream 001-done listed:\n%s\n' "$context"
+else
+  pass=$((pass + 1))
+fi
+
+git -C "$repo" checkout -q -b backlog-ideas
+check 'a backlog branch'
 
 printf '\n%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

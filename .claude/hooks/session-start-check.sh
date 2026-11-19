@@ -4,7 +4,9 @@
 #   1. Unconfigured clone (no .claude/.bootstrapped) — push the session into
 #      the bootstrap skill.
 #   2. Configured repo — report where the current branch stands in the loop
-#      and what the next action is. The stage is derived from the artifact
+#      and what the next action is (on the default branch: which streams are
+#      done, in progress and not started, via the sdlc skill's streams.sh).
+#      The stage is derived from the artifact
 #      chain itself — which of brief/plan are committed in HEAD for the
 #      branch slug, and whether code has landed since the plan commit —
 #      never from separate state and never from an approval flag. Every
@@ -53,13 +55,45 @@ checklist_line() {
 slug=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || exit 0
 [ -n "$slug" ] || exit 0
 
+NEW_BRIEF="Stage 1 (Brief) on a new slug — next sequence number plus a short
+kebab-case name, e.g. 007-csv-export (the sdlc skill says how to number it) —
+run git checkout -b <slug>, then write brief/<slug>.md from brief/TEMPLATE.md."
+
+# The state of every stream, from the sdlc skill's own script, so the two
+# can't drift. Local refs only: no fetch here, to keep session start fast.
+default_branch_status() {
+  streams=$(bash .claude/skills/sdlc/streams.sh 2>/dev/null) || streams=""
+  waiting=$(printf '%s\n' "$streams" | awk -F'\t' '$2 == "not started" { print "  " $1 }')
+  active=$(printf '%s\n' "$streams" | awk -F'\t' '$2 == "in progress" { print "  " $1 " — " $3 }')
+
+  printf 'Loop status: on the default branch (%s) — no work stream checked out.\n' "$slug"
+  printf 'Streams, as of the last git fetch:\n'
+  printf 'Not started:\n%s\n' "${waiting:-  none}"
+  printf 'In progress:\n%s\n\n' "${active:-  none}"
+
+  if [ -n "$waiting" ]; then
+    printf 'Next: ask the user which to do — start a not-started brief, lowest
+number first (git checkout -b <slug> origin/HEAD; its brief is already
+committed, so it opens at Stage 2), or %s\n' "$NEW_BRIEF"
+  else
+    printf 'Next: %s\n' "$NEW_BRIEF"
+  fi
+}
+
 case "$slug" in
   main | master | HEAD)
-    emit "Loop status: on the default branch ($slug) — no work stream checked out.
+    emit "$(default_branch_status)
 
-Next: Stage 1 (Brief). Pick a slug — next sequence number plus a short
-kebab-case name, e.g. 007-csv-export (the sdlc skill says how to number it) —
-run git checkout -b <slug>, then write brief/<slug>.md from brief/TEMPLATE.md.
+$HOWTO"
+    ;;
+  backlog-*)
+    emit "Loop status — branch: $slug, a backlog branch: briefs to start later,
+no plans and no code.
+
+Next: write each brief as brief/<slug>.md from brief/TEMPLATE.md, each taking
+its own sequence number (the sdlc skill says how), interviewing the user one
+question at a time, and commit them. Then ship by Stage 4's light path. Full
+instructions: .claude/skills/sdlc/stages/1-brief.md
 
 $HOWTO"
     ;;
